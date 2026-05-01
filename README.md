@@ -3,10 +3,10 @@
 A sophisticated local AI chatbot with text and image generation, powered by **Ollama** and **Stable Diffusion**.
 The LLM is running in the local system.
 ## System Config:
-MacBook Air
-Chip : Apple M1
-Memory : 8GB
-macOS : 26.1
+MacBook Air 
+Chip : Apple M1 
+Memory : 8GB 
+macOS : 26.1 
 
 ---
 
