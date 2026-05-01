@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADDA — AI Chatbot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/dockerfile.min.js"></script>
+<style>
+:root {
+  --bg: #080b10;
+  --surface: #0e1318;
+  --surface2: #141a22;
+  --border: #1e2a36;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --accent3: #f59e0b;
+  --text: #e8edf2;
+  --text2: #6b7f8e;
+  --text3: #3d4f5c;
+  --user-bubble: #0f2535;
+  --bot-bubble: #0e1318;
+  --success: #10b981;
+  --danger: #ef4444;
+  --glow: 0 0 30px rgba(0,212,255,0.15);
+  --radius: 16px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Background grid */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Ambient glows */
+body::after {
+  content:'';
+  position:fixed;
+  top:-200px; left:-200px;
+  width:600px; height:600px;
+  background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── HEADER ── */
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 60px;
+  background: rgba(8,11,16,0.9);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.logo-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.logo span { color: var(--accent); }
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-tabs {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.mode-tab {
+  padding: 5px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.mode-tab.active {
+  background: var(--accent);
+  color: #000;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.6; transform:scale(0.85); }
+}
+
+.model-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text2);
+}
+
+/* ── MAIN LAYOUT ── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.new-chat-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--accent), #0099cc);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.new-chat-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,212,255,0.3);
+}
+
+.sidebar-section {
+  padding: 12px 16px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.history-list::-webkit-scrollbar { width: 3px; }
+.history-list::-webkit-scrollbar-track { background: transparent; }
+.history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.history-item {
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item:hover { background: var(--surface2); color: var(--text); }
+.history-item.active { background: rgba(0,212,255,0.08); color: var(--accent); border: 1px solid rgba(0,212,255,0.15); }
+
+.history-icon { font-size: 14px; flex-shrink: 0; }
+
+.history-item { position: relative; }
+.history-item-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.history-actions { display: none; align-items: center; gap: 2px; flex-shrink: 0; margin-left: auto; }
+.history-item:hover .history-actions { display: flex; }
+
+.hist-btn {
+  width: 22px; height: 22px;
+  border: none; border-radius: 5px;
+  background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: background 0.15s; padding: 0;
+  color: var(--text2);
+}
+.hist-btn:hover { background: var(--surface); }
+.hist-btn.rename:hover { color: var(--accent); }
+.hist-btn.delete:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px; width: 360px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 16px; font-family:'JetBrains Mono',monospace; line-height:1.5; }
+.modal-input {
+  width: 100%;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-family: 'Syne', sans-serif; font-size: 13px;
+  padding: 10px 14px; outline: none; margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { border-color: var(--accent); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-btn {
+  padding: 8px 18px; border-radius: 8px;
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; border: none; transition: all 0.15s;
+}
+.modal-btn.cancel { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+.modal-btn.cancel:hover { color: var(--text); border-color: var(--text2); }
+.modal-btn.confirm { background: var(--accent); color: #000; }
+.modal-btn.confirm:hover { background: #00b8d9; }
+.modal-btn.danger { background: var(--danger); color: #fff; }
+.modal-btn.danger:hover { background: #dc2626; }
+
+/* Settings panel */
+.sidebar-settings {
+  border-top: 1px solid var(--border);
+  padding: 12px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px;
+}
+
+.setting-label {
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 500;
+}
+
+.setting-value {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+}
+
+.slider {
+  width: 80px;
+  accent-color: var(--accent);
+}
+
+/* ── CHAT AREA ── */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Welcome screen */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  gap: 16px;
+  padding: 40px;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.welcome-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 0 40px rgba(0,212,255,0.2);
+}
+
+.welcome h2 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.welcome h2 span { color: var(--accent); }
+
+.welcome p {
+  font-size: 14px;
+  color: var(--text2);
+  max-width: 400px;
+  line-height: 1.6;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+}
+
+.suggestion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.chip {
+  padding: 8px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Syne', sans-serif;
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0,212,255,0.05);
+}
+
+/* Message bubbles */
+.message {
+  display: flex;
+  gap: 12px;
+  animation: msgIn 0.3s ease;
+  max-width: 800px;
+}
+
+@keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.message.user { flex-direction: row-reverse; align-self: flex-end; }
+.message.bot { align-self: flex-start; }
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.avatar.bot-av {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 12px rgba(0,212,255,0.2);
+}
+
+.avatar.user-av {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.bubble {
+  max-width: 600px;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  line-height: 1.65;
+  position: relative;
+}
+
+.message.user .bubble {
+  background: var(--user-bubble);
+  border: 1px solid rgba(0,212,255,0.15);
+  border-bottom-right-radius: 4px;
+}
+
+.message.bot .bubble {
+  background: var(--bot-bubble);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble-meta {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Generated image */
+.gen-image {
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  border: 1px solid var(--border);
+  display: block;
+  margin-top: 8px;
+}
+
+/* Image placeholder/loading */
+.image-loading {
+  width: 400px;
+  height: 300px;
+  background: var(--surface2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 8px;
+}
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 16px;
+}
+
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typingBounce 1.2s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── INPUT AREA ── */
+.input-area {
+  padding: 16px 24px 20px;
+  background: rgba(8,11,16,0.95);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  flex-shrink: 0;
+}
+
+.input-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.toolbar-btn {
+  padding: 5px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text2);
+  font-size: 11px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+.toolbar-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+.input-box {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  transition: border-color 0.2s;
+}
+
+.input-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--glow);
+}
+
+textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  resize: none;
+  max-height: 120px;
+  line-height: 1.5;
+  min-height: 22px;
+}
+
+textarea::placeholder { color: var(--text3); }
+
+.send-btn {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.send-btn:hover { background: #00b8d9; transform: scale(1.05); }
+.send-btn:disabled { background: var(--surface2); color: var(--text3); cursor: not-allowed; transform: none; }
+
+.input-hint {
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  gap: 16px;
+}
+
+/* Image gen panel */
+.image-panel {
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  display: none;
+}
+
+.image-panel.visible { display: block; animation: fadeIn 0.2s ease; }
+
+.image-panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.image-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.img-option {
+  padding: 5px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Syne', sans-serif;
+}
+
+.img-option:hover, .img-option.sel {
+  border-color: var(--accent3);
+  color: var(--accent3);
+  background: rgba(245,158,11,0.08);
+}
+
+/* Error toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  background: var(--danger);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 100;
+  animation: slideIn 0.3s ease;
+  display: none;
+}
+
+@keyframes slideIn { from { transform: translateX(100px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+/* Scrollbar for messages */
+.messages { scrollbar-gutter: stable; }
+
+/* ── CODE BLOCKS — IDE style ── */
+.code-block-wrapper {
+  margin: 10px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #2a3a4a;
+  background: #1a1f2e;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  background: #141924;
+  border-bottom: 1px solid #2a3a4a;
+}
+
+.code-lang-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-lang-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.lang-python .code-lang-dot  { background: #3b82f6; }
+.lang-python .code-lang-badge { color: #3b82f6; }
+.lang-javascript .code-lang-dot { background: #f59e0b; }
+.lang-javascript .code-lang-badge { color: #f59e0b; }
+.lang-typescript .code-lang-dot { background: #60a5fa; }
+.lang-typescript .code-lang-badge { color: #60a5fa; }
+.lang-bash .code-lang-dot, .lang-shell .code-lang-dot { background: #10b981; }
+.lang-bash .code-lang-badge, .lang-shell .code-lang-badge { color: #10b981; }
+.lang-sql .code-lang-dot { background: #f97316; }
+.lang-sql .code-lang-badge { color: #f97316; }
+.lang-java .code-lang-dot { background: #ef4444; }
+.lang-java .code-lang-badge { color: #ef4444; }
+.lang-json .code-lang-dot { background: #a78bfa; }
+.lang-json .code-lang-badge { color: #a78bfa; }
+.lang-css .code-lang-dot { background: #ec4899; }
+.lang-css .code-lang-badge { color: #ec4899; }
+.lang-yaml .code-lang-dot { background: #14b8a6; }
+.lang-yaml .code-lang-badge { color: #14b8a6; }
+.lang-dockerfile .code-lang-dot { background: #0ea5e9; }
+.lang-dockerfile .code-lang-badge { color: #0ea5e9; }
+
+.copy-code-btn {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid #2a3a4a;
+  border-radius: 5px;
+  color: #6b7f8e;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.copy-code-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.05); }
+.copy-code-btn.copied { border-color: var(--success); color: var(--success); }
+
+.code-block-body {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2a3a4a transparent;
+}
+.code-block-body::-webkit-scrollbar { height: 4px; }
+.code-block-body::-webkit-scrollbar-thumb { background: #2a3a4a; border-radius: 2px; }
+
+/* Each line of code = one row with number + content side by side */
+.code-block-body pre {
+  margin: 0 !important;
+  padding: 10px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+  overflow: visible !important;
+  counter-reset: line-counter;
+}
+
+.code-block-body pre code {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 13px !important;
+  display: block;
+}
+
+/* Every line inside the code block */
+.code-line {
+  display: flex;
+  align-items: baseline;
+  min-height: 1.65em;
+  padding: 0 16px 0 0;
+}
+
+.code-line:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.ln {
+  flex-shrink: 0;
+  width: 44px;
+  padding: 0 12px 0 16px;
+  text-align: right;
+  color: #3d4f5c;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  user-select: none;
+  border-right: 1px solid #2a3a4a;
+  margin-right: 14px;
+  background: #141924;
+  line-height: 1.65;
+}
+
+.lc {
+  flex: 1;
+  white-space: pre;
+  line-height: 1.65;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+.hljs { background: transparent !important; }
+
+.bubble code:not(.hljs) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--accent3);
+}
+
+/* Token counter */
+.token-bar {
+  height: 2px;
+  background: var(--surface2);
+  border-radius: 1px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.token-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    AD<span>DA</span>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('chat')" id="tab-chat">💬 Chat</button>
+    <button class="mode-tab" onclick="setMode('image')" id="tab-image">🎨 Image</button>
+    <button class="mode-tab" onclick="setMode('both')" id="tab-both">✨ Both</button>
+  </div>
+
+  <div class="header-controls">
+    <div class="status-dot"></div>
+    <div class="model-badge">
+      <span>🤖</span>
+      <span id="model-display">openchat:7b</span>
+    </div>
+  </div>
+</header>
+
+<!-- Main Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <button class="new-chat-btn" onclick="newChat()">
+        ＋ New Conversation
+      </button>
+    </div>
+
+    <div class="sidebar-section">History</div>
+    <div class="history-list" id="history-list">
+      <!-- populated by JS -->
+    </div>
+
+    <div class="sidebar-settings">
+      <div class="sidebar-section" style="padding:0 0 8px">Settings</div>
+
+      <div class="setting-row">
+        <span class="setting-label">Model</span>
+        <select id="model-select" onchange="updateModel()" style="background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:6px;padding:3px 6px;font-size:11px;font-family:'JetBrains Mono',monospace;outline:none;">
+          <option value="openchat:7b">openchat:7b</option>
+          <option value="llama3.1:7b">llama3.1:7b</option>
+          <option value="mistral:7b">mistral:7b</option>
+          <option value="gemma2:7b">gemma2:7b</option>
+          <option value="phi3:3.8b">phi3:3.8b</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label">Temperature</span>
+        <span class="setting-value" id="temp-val">0.7</span>
+      </div>
+      <input type="range" class="slider" min="0" max="1" step="0.1" value="0.7"
+             oninput="document.getElementById('temp-val').textContent=this.value" style="width:100%;margin-bottom:8px;accent-color:var(--accent);">
+
+      <div class="setting-row">
+        <span class="setting-label">Max tokens</span>
+        <span class="setting-value" id="tokens-val">2048</span>
+      </div>
+      <input type="range" class="slider" min="256" max="4096" step="256" value="2048"
+             oninput="document.getElementById('tokens-val').textContent=this.value" style="width:100%;accent-color:var(--accent2);">
+
+      <div style="margin-top:12px;">
+        <button onclick="clearHistory()" style="width:100%;padding:7px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:11px;font-family:'Syne',sans-serif;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
+          🗑 Clear History
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <!-- Welcome screen -->
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">⚡</div>
+        <h2>Hello, I'm <span>ADDA</span></h2>
+        <p>Your local AI assistant. Ask me anything or generate stunning images — all running privately on your machine.</p>
+        <div class="suggestion-chips">
+          <div class="chip" onclick="useChip(this)">Explain microservices</div>
+          <div class="chip" onclick="useChip(this)">Generate an image of a sunset</div>
+          <div class="chip" onclick="useChip(this)">Write a Python web scraper</div>
+          <div class="chip" onclick="useChip(this)">What is machine learning?</div>
+          <div class="chip" onclick="useChip(this)">Create a futuristic city image</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+
+      <!-- Image options panel -->
+      <div class="image-panel" id="image-panel">
+        <div class="image-panel-title">🎨 Image Generation Options</div>
+        <div class="image-options">
+          <span class="img-option sel" onclick="toggleImgOpt(this)" data-key="style" data-val="photorealistic">Photorealistic</span>
+          <span class="img-option" onclick="toggleImgOpt(this)" data-key="style" data-val="anime">Anime</span>
+          <span class="img-option" onclick="toggleImgOpt(this)" data-key="style" data-val="oil painting">Oil Painting</span>
+          <span class="img-option" onclick="toggleImgOpt(this)" data-key="style" data-val="sketch">Sketch</span>
+          <span class="img-option" onclick="toggleImgOpt(this)" data-key="style" data-val="3D render">3D Render</span>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="input-toolbar">
+        <button class="toolbar-btn" onclick="toggleImagePanel()" id="img-toggle">🎨 Image Mode</button>
+        <button class="toolbar-btn" onclick="clearMessages()">🗑 Clear</button>
+        <button class="toolbar-btn" onclick="exportChat()">📤 Export</button>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;" id="char-count">0 chars</div>
+      </div>
+
+      <!-- Token bar -->
+      <div class="token-bar">
+        <div class="token-fill" id="token-fill" style="width:0%"></div>
+      </div>
+
+      <!-- Input box -->
+      <div class="input-box" style="margin-top:8px;">
+        <textarea id="user-input" placeholder="Ask anything or describe an image to generate..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this); updateCharCount(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send (Enter)">➤</button>
+      </div>
+
+      <div class="input-hint">
+        <span>⏎ Send &nbsp;|&nbsp; ⇧⏎ New line &nbsp;|&nbsp; Ollama @ localhost:11434</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let mode = 'chat';
+let imageMode = false;
+let selectedStyle = 'photorealistic';
+let conversations = JSON.parse(localStorage.getItem('adda_convs') || '[]');
+let currentConvId = null;
+let messages = []; // full chat history
+let isLoading = false;
+
+const OLLAMA_BASE = 'http://localhost:8081'; // backend proxy
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+renderHistory();
+
+// ── Mode ─────────────────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + m).classList.add('active');
+}
+
+function toggleImagePanel() {
+  imageMode = !imageMode;
+  document.getElementById('image-panel').classList.toggle('visible', imageMode);
+  document.getElementById('img-toggle').classList.toggle('active', imageMode);
+  document.getElementById('user-input').placeholder = imageMode
+    ? 'Describe the image you want to generate...'
+    : 'Ask anything or describe an image to generate...';
+}
+
+function toggleImgOpt(el) {
+  document.querySelectorAll('.img-option').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedStyle = el.dataset.val;
+}
+
+// ── Model ────────────────────────────────────────────────────────────────────
+function updateModel() {
+  const m = document.getElementById('model-select').value;
+  document.getElementById('model-display').textContent = m;
+}
+
+// ── Input helpers ────────────────────────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function updateCharCount(el) {
+  const len = el.value.length;
+  document.getElementById('char-count').textContent = len + ' chars';
+  document.getElementById('token-fill').style.width = Math.min((len / 2000) * 100, 100) + '%';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function useChip(el) {
+  const txt = el.textContent;
+  document.getElementById('user-input').value = txt;
+  autoResize(document.getElementById('user-input'));
+  updateCharCount(document.getElementById('user-input'));
+  sendMessage();
+}
+
+// ── Send ─────────────────────────────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+
+  // Hide welcome
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  // Add to history
+  if (!currentConvId) startNewConv(text);
+
+  input.value = '';
+  input.style.height = 'auto';
+  updateCharCount(input);
+
+  // Render user message
+  appendMessage('user', text);
+  messages.push({ role: 'user', content: text });
+
+  // Decide: image or chat
+  const isImageRequest = imageMode || isImagePrompt(text);
+
+  if (isImageRequest) {
+    await generateImage(text);
+  } else {
+    await generateText(text);
+  }
+
+  saveConversation();
+}
+
+function isImagePrompt(text) {
+  const keywords = ['generate', 'create', 'draw', 'make', 'image', 'picture', 'photo', 'illustration', 'artwork', 'paint', 'render'];
+  const lower = text.toLowerCase();
+  return keywords.some(k => lower.includes(k)) && lower.length > 10;
+}
+
+// ── Text Generation ──────────────────────────────────────────────────────────
+async function generateText(userText) {
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+
+  const model = document.getElementById('model-select').value;
+  const temp = parseFloat(document.getElementById('temp-val').textContent);
+
+  // Show typing indicator
+  const typingId = 'typing-' + Date.now();
+  const typingEl = document.createElement('div');
+  typingEl.id = typingId;
+  typingEl.className = 'message bot';
+  typingEl.innerHTML = `
+    <div class="avatar bot-av">⚡</div>
+    <div class="bubble bot-bubble">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  document.getElementById('messages').appendChild(typingEl);
+  scrollBottom();
+
+  try {
+    const response = await fetch(`${OLLAMA_BASE}/api/chat-stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: temp
+      })
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    // Remove typing indicator, create real bubble
+    typingEl.remove();
+    const botEl = createBotBubble();
+    const contentEl = botEl.querySelector('.bubble-content');
+
+    let fullReply = '';
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const lines = decoder.decode(value).split('\n').filter(l => l.startsWith('data:'));
+      for (const line of lines) {
+        try {
+          const chunk = JSON.parse(line.replace('data: ', ''));
+          if (chunk.error) throw new Error(chunk.error);
+          const token = chunk.token || '';
+          fullReply += token;
+          contentEl.innerHTML = formatText(fullReply);
+          scrollBottom();
+          if (chunk.done) break;
+        } catch(e) {
+          if (e.message !== 'Unexpected end of JSON input') throw e;
+        }
+      }
+    }
+
+    messages.push({ role: 'assistant', content: fullReply });
+    updateConvTitle(userText);
+
+  } catch (err) {
+    typingEl.remove();
+    showError('Cannot connect to Ollama. Make sure it\'s running: ollama serve');
+    appendBotError('⚠️ Could not connect to Ollama at localhost:11434. Run: <code>ollama serve</code>');
+  } finally {
+    isLoading = false;
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+// ── Image Generation ─────────────────────────────────────────────────────────
+async function generateImage(prompt) {
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+
+  // Build enhanced prompt
+  const enhancedPrompt = `${prompt}, ${selectedStyle} style, high quality, detailed, 4k`;
+
+  // Show loading image placeholder
+  const botEl = createBotBubble();
+  const contentEl = botEl.querySelector('.bubble-content');
+  contentEl.innerHTML = `
+    <div style="color:var(--text2);font-size:13px;margin-bottom:8px;">Generating image...</div>
+    <div class="image-loading">
+      <div class="spinner"></div>
+      <span>Creating your ${selectedStyle} image</span>
+      <span style="font-size:10px;color:var(--text3);">${enhancedPrompt.substring(0, 60)}...</span>
+    </div>`;
+  scrollBottom();
+
+  try {
+    // Try Stable Diffusion (AUTOMATIC1111) first
+    const sdResponse = await tryStableDiffusion(enhancedPrompt);
+
+    if (sdResponse) {
+      contentEl.innerHTML = `
+        <div style="color:var(--text2);font-size:13px;margin-bottom:8px;">✅ Generated with Stable Diffusion</div>
+        <img src="data:image/png;base64,${sdResponse}" class="gen-image" alt="Generated image"/>
+        <div class="bubble-meta">Prompt: ${prompt} · Style: ${selectedStyle}</div>`;
+    } else {
+      // Fallback: use Ollama to describe what the image would look like
+      // and show a picsum placeholder
+      const seed = Math.abs(hashString(prompt)) % 1000;
+      contentEl.innerHTML = `
+        <div style="color:var(--text2);font-size:13px;margin-bottom:8px;">
+          🎨 Image generation requires Stable Diffusion.<br>
+          <span style="font-size:11px;color:var(--text3);">Start it with: <code style="color:var(--accent3)">python launch.py --api</code></span>
+        </div>
+        <img src="https://picsum.photos/seed/${seed}/400/300" class="gen-image" alt="Placeholder"/>
+        <div class="bubble-meta" style="margin-top:6px;">Showing placeholder · Prompt: ${prompt}</div>`;
+
+      // Also get text description from Ollama
+      messages.push({ role: 'user', content: `Describe this image in detail as if you generated it: "${prompt}" in ${selectedStyle} style. Be vivid and creative.` });
+      // (fire and forget the text description)
+      generateImageDescription(prompt);
+    }
+
+    messages.push({ role: 'assistant', content: `[Generated image for: ${prompt}]` });
+
+  } catch(err) {
+    contentEl.innerHTML = `<div style="color:var(--danger)">Image generation failed: ${err.message}</div>`;
+  } finally {
+    isLoading = false;
+    document.getElementById('send-btn').disabled = false;
+    scrollBottom();
+  }
+}
+
+async function tryStableDiffusion(prompt) {
+  try {
+    const res = await fetch('http://localhost:7860/sdapi/v1/txt2img', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        negative_prompt: 'blurry, bad quality, distorted',
+        steps: 20,
+        width: 512,
+        height: 512,
+        cfg_scale: 7
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.images?.[0] || null;
+  } catch { return null; }
+}
+
+async function generateImageDescription(prompt) {
+  const model = document.getElementById('model-select').value;
+  try {
+    const res = await fetch(`${OLLAMA_BASE}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt: `Describe this scene vividly as if you painted it: "${prompt}"`,
+        stream: false
+      })
+    });
+    const data = await res.json();
+    if (data.response) {
+      appendMessage('bot', '🖼 ' + data.response);
+    }
+  } catch {}
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+function appendMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = `message ${role}`;
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  if (role === 'user') {
+    div.innerHTML = `
+      <div class="avatar user-av">👤</div>
+      <div class="bubble">
+        <div class="bubble-content">${escapeHtml(text)}</div>
+        <div class="bubble-meta">${time}</div>
+      </div>`;
+  } else {
+    div.innerHTML = `
+      <div class="avatar bot-av">⚡</div>
+      <div class="bubble">
+        <div class="bubble-content">${formatText(text)}</div>
+        <div class="bubble-meta">ADDA · ${time}</div>
+      </div>`;
+  }
+
+  document.getElementById('messages').appendChild(div);
+  scrollBottom();
+}
+
+function createBotBubble() {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'message bot';
+  div.innerHTML = `
+    <div class="avatar bot-av">⚡</div>
+    <div class="bubble">
+      <div class="bubble-content"></div>
+      <div class="bubble-meta">ADDA · ${time}</div>
+    </div>`;
+  document.getElementById('messages').appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function appendBotError(html) {
+  const div = document.createElement('div');
+  div.className = 'message bot';
+  div.innerHTML = `
+    <div class="avatar bot-av">⚡</div>
+    <div class="bubble" style="border-color:var(--danger)">
+      <div class="bubble-content" style="color:var(--danger)">${html}</div>
+    </div>`;
+  document.getElementById('messages').appendChild(div);
+  scrollBottom();
+}
+
+// ── Language display names ──────────────────────────────────────────────────
+const LANG_NAMES = {
+  python:'Python', javascript:'JavaScript', typescript:'TypeScript',
+  js:'JavaScript', ts:'TypeScript', py:'Python',
+  bash:'Bash', shell:'Shell', sh:'Bash',
+  sql:'SQL', java:'Java', json:'JSON', css:'CSS',
+  html:'HTML', yaml:'YAML', yml:'YAML',
+  dockerfile:'Dockerfile', go:'Go', rust:'Rust',
+  cpp:'C++', c:'C', ruby:'Ruby', php:'PHP',
+};
+
+function buildCodeBlock(lang, rawCode) {
+  const normLang = lang ? lang.toLowerCase().trim() : '';
+  const displayLang = LANG_NAMES[normLang] || normLang || 'Code';
+  const hlLang = normLang || 'plaintext';
+
+  // Highlight the whole block first
+  let highlighted;
+  try {
+    if (normLang && hljs.getLanguage(normLang)) {
+      highlighted = hljs.highlight(rawCode, { language: normLang }).value;
+    } else {
+      highlighted = hljs.highlightAuto(rawCode).value;
+    }
+  } catch {
+    highlighted = escapeHtmlRaw(rawCode);
+  }
+
+  // Split highlighted HTML into per-line rows.
+  // We split on literal newlines that are OUTSIDE span tags.
+  // Strategy: split rawCode by lines, re-highlight each line keeping
+  // span context — but the simplest accurate approach is to split
+  // the highlighted output on \n directly (hljs preserves newlines).
+  const hlLines = highlighted.split('\n');
+
+  // Remove trailing empty line that hljs sometimes adds
+  if (hlLines[hlLines.length - 1] === '') hlLines.pop();
+
+  // Build each row: line-number cell + code cell
+  const rows = hlLines.map((lineHtml, i) => {
+    return `<div class="code-line"><span class="ln">${i + 1}</span><span class="lc">${lineHtml || ' '}</span></div>`;
+  }).join('');
+
+  const blockId = 'cb-' + Math.random().toString(36).slice(2,8);
+  const langClass = normLang ? `lang-${normLang}` : '';
+
+  // Store raw code for copy
+  const escaped = escapeHtmlRaw(rawCode);
+
+  return `
+<div class="code-block-wrapper ${langClass}">
+  <div class="code-block-header">
+    <span class="code-lang-badge">
+      <span class="code-lang-dot"></span>
+      ${displayLang}
+    </span>
+    <button class="copy-code-btn" id="copy-${blockId}" onclick="copyCode('${blockId}')">
+      📋 Copy
+    </button>
+  </div>
+  <div class="code-block-body">
+    <pre><code id="${blockId}" class="hljs language-${hlLang}" style="display:none">${escaped}</code><div class="code-lines-wrap">${rows}</div></pre>
+  </div>
+</div>`;
+}
+
+function copyCode(blockId) {
+  const el = document.getElementById(blockId);
+  if (!el) return;
+  // el is the hidden <code> with escaped raw text — decode it
+  const raw = el.textContent;
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = document.getElementById('copy-' + blockId);
+    if (btn) {
+      btn.textContent = '✅ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+    }
+  });
+}
+
+function escapeHtmlRaw(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatText(text) {
+  // Extract and protect code blocks first (before any other escaping)
+  const codeBlocks = [];
+  let processed = text.replace(/```(\w*)\n?([\/\s\S]*?)```/g, (_, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(buildCodeBlock(lang, code.replace(/\n$/, '')));
+    return `%%CODEBLOCK_${idx}%%`;
+  });
+
+  // Now escape HTML for the non-code parts
+  processed = processed
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // Inline markdown formatting
+  processed = processed
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^#{3}\s(.+)$/gm, '<h4 style="margin:8px 0 4px;color:var(--accent)">$1</h4>')
+    .replace(/^#{2}\s(.+)$/gm, '<h3 style="margin:8px 0 4px;color:var(--accent)">$1</h3>')
+    .replace(/^#{1}\s(.+)$/gm, '<h2 style="margin:8px 0 4px;color:var(--accent)">$1</h2>')
+    .replace(/^[-*]\s(.+)/gm, '<li style="margin-left:16px;list-style:disc">$1</li>')
+    .replace(/^(\d+)\.\s(.+)/gm, '<li style="margin-left:16px;list-style:decimal">$2</li>')
+    .replace(/\n/g, '<br>');
+
+  // Restore code blocks
+  codeBlocks.forEach((block, i) => {
+    processed = processed.replace(`%%CODEBLOCK_${i}%%`, block);
+  });
+
+  return processed;
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function scrollBottom() {
+  const m = document.getElementById('messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+function showError(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+function clearMessages() {
+  document.getElementById('messages').innerHTML = '';
+  messages = [];
+  currentConvId = null;
+  // Re-add welcome
+  const w = document.createElement('div');
+  w.className = 'welcome'; w.id = 'welcome';
+  w.innerHTML = `
+    <div class="welcome-icon">⚡</div>
+    <h2>Hello, I'm <span>ADDA</span></h2>
+    <p>Your local AI assistant. Ask me anything or generate stunning images.</p>`;
+  document.getElementById('messages').appendChild(w);
+}
+
+// ── Conversation History ──────────────────────────────────────────────────────
+function startNewConv(firstMsg) {
+  currentConvId = Date.now().toString();
+  conversations.unshift({ id: currentConvId, title: firstMsg.substring(0, 40) + '...', time: new Date().toLocaleDateString() });
+  if (conversations.length > 20) conversations.pop();
+  saveConversations();
+  renderHistory();
+}
+
+function updateConvTitle(text) {
+  const conv = conversations.find(c => c.id === currentConvId);
+  if (conv && conv.title.endsWith('...')) {
+    conv.title = text.substring(0, 40) + (text.length > 40 ? '...' : '');
+    saveConversations();
+    renderHistory();
+  }
+}
+
+function saveConversations() {
+  localStorage.setItem('adda_convs', JSON.stringify(conversations));
+}
+
+function saveConversation() {
+  localStorage.setItem('adda_msgs_' + currentConvId, JSON.stringify(messages));
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (conversations.length === 0) {
+    list.innerHTML = '<div style="padding:12px;font-size:11px;color:var(--text3);text-align:center;">No conversations yet</div>';
+    return;
+  }
+  list.innerHTML = conversations.map(c => `
+    <div class="history-item ${c.id === currentConvId ? 'active' : ''}" onclick="loadConv('${c.id}')">
+      <span class="history-icon">💬</span>
+      <span class="history-item-text" title="${c.title}">${c.title}</span>
+      <div class="history-actions" onclick="event.stopPropagation()">
+        <button class="hist-btn rename" title="Rename" onclick="openRenameModal('${c.id}')">✏️</button>
+        <button class="hist-btn delete" title="Delete" onclick="openDeleteModal('${c.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Rename Modal ──────────────────────────────────────────────────────────────
+function openRenameModal(id) {
+  const conv = conversations.find(c => c.id === id);
+  if (!conv) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">✏️ Rename Chat</div>
+      <div class="modal-sub">Enter a new title for this conversation.</div>
+      <input class="modal-input" id="rename-input" type="text"
+             value="${conv.title}" maxlength="80"
+             onkeydown="if(event.key==='Enter') confirmRename('${id}'); if(event.key==='Escape') closeModal();"/>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmRename('${id}')">Save</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', closeModal);
+  document.body.appendChild(overlay);
+
+  // Focus and select text
+  setTimeout(() => {
+    const inp = document.getElementById('rename-input');
+    inp.focus(); inp.select();
+  }, 50);
+}
+
+function confirmRename(id) {
+  const inp = document.getElementById('rename-input');
+  const newTitle = inp ? inp.value.trim() : '';
+  if (!newTitle) { showError('Title cannot be empty'); return; }
+
+  const conv = conversations.find(c => c.id === id);
+  if (conv) {
+    conv.title = newTitle;
+    saveConversations();
+    renderHistory();
+  }
+  closeModal();
+}
+
+// ── Delete Modal ──────────────────────────────────────────────────────────────
+function openDeleteModal(id) {
+  const conv = conversations.find(c => c.id === id);
+  if (!conv) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-title">🗑 Delete Chat</div>
+      <div class="modal-sub">Are you sure you want to delete:<br><strong style="color:var(--text)">"${conv.title}"</strong><br><br>This cannot be undone.</div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-btn danger" onclick="confirmDelete('${id}')">Delete</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', closeModal);
+  document.body.appendChild(overlay);
+}
+
+function confirmDelete(id) {
+  // Remove from conversations list
+  conversations = conversations.filter(c => c.id !== id);
+  // Remove stored messages
+  localStorage.removeItem('adda_msgs_' + id);
+  saveConversations();
+
+  // If deleting current conv, clear the chat area
+  if (id === currentConvId) {
+    clearMessages();
+    currentConvId = null;
+  }
+
+  renderHistory();
+  closeModal();
+}
+
+// ── Close Modal ───────────────────────────────────────────────────────────────
+function closeModal() {
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.remove();
+}
+
+function loadConv(id) {
+  currentConvId = id;
+  const saved = JSON.parse(localStorage.getItem('adda_msgs_' + id) || '[]');
+  messages = saved;
+
+  const container = document.getElementById('messages');
+  container.innerHTML = '';
+
+  saved.forEach(m => {
+    appendMessage(m.role === 'user' ? 'user' : 'bot', m.content);
+  });
+
+  renderHistory();
+}
+
+function newChat() {
+  clearMessages();
+  currentConvId = null;
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!confirm('Clear all conversation history?')) return;
+  conversations = [];
+  localStorage.removeItem('adda_convs');
+  currentConvId = null;
+  clearMessages();
+  renderHistory();
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportChat() {
+  if (messages.length === 0) { showError('No messages to export'); return; }
+  const text = messages.map(m => `[${m.role.toUpperCase()}]\n${m.content}\n`).join('\n---\n\n');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'adda-chat-' + Date.now() + '.txt';
+  a.click();
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function hashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  return h;
+}
+</script>
+</body>
+</html>
