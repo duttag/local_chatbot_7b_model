@@ -120,4 +120,4 @@ ollama pull phi3:3.8b
 - Python 3.8+ (no pip installs — uses stdlib only)
 - Ollama installed and running
 - Modern browser (Chrome, Firefox, Edge)
-- *(Optional)* AUTOMATIC1111 for real image generation
+
